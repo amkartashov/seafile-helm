@@ -1,0 +1,28 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: seafile
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+spec:
+  tls:
+  - secretName: {{ .Values.tlsSecretName }}
+    hosts:
+    - {{ .Values.hostname }}
+  rules:
+    - host: {{ .Values.hostname }}
+      http:
+        paths:
+        - backend:
+            serviceName: seafile
+            servicePort: 80
+        - path: /media
+          backend:
+            serviceName: seafile
+            servicePort: 81
+        - path: /seafhttp
+          backend:
+            serviceName: seafile
+            servicePort: 82
+

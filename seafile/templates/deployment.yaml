@@ -1,0 +1,79 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: seafile
+  labels:
+    app: seafile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seafile
+  template:
+    metadata:
+      labels:
+        app: seafile
+    spec:
+      volumes:
+{{ toYaml .Values.volumes | trim | indent 6 }}
+      containers:
+      - name: ccnet
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        command: [ "/bin/entrypoint", "ccnet"]
+        volumeMounts:
+          - mountPath: /seafile
+            name: seafile
+      - name: seaf
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        command: [ "/bin/entrypoint", "seaf"]
+        ports:
+        - containerPort: 8082
+          name: filesever
+        volumeMounts:
+          - mountPath: /seafile
+            name: seafile
+      - name: seahub
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        command: [ "/bin/entrypoint", "seahub"]
+        ports:
+        - containerPort: 8000
+          name: seahub
+        volumeMounts:
+          - mountPath: /seafile
+            name: seafile
+      - name: seahubstatic
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+          name: seahubstatic
+        volumeMounts:
+          - mountPath: /usr/share/nginx/html
+            name: seahubstatic
+          - mountPath: /usr/share/nginx/html/avatars
+            name: seahubavatars
+      initContainers:
+      - name: init
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        command: [ "/bin/entrypoint", "init"]
+        volumeMounts:
+          - mountPath: /seafile
+            name: seafile
+        env:
+          - name: SERVER_NAME
+            value: {{ .Values.servername }}
+          - name: SERVER_HOSTNAME
+            value: {{ .Values.hostname }}
+          - name: MYSQL_HOST
+            value: {{ .Values.mysql.host }}
+          - name: MYSQL_USER
+            value: {{ .Values.mysql.user }}
+          - name: MYSQL_PASSWORD
+            value: {{ .Values.mysql.password }}
+          - name: ADMINEMAIL
+            value: {{ .Values.admin.email }}
+          - name: ADMINPASSWORD
+            value: {{ .Values.admin.password }}

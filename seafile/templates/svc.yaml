@@ -1,0 +1,20 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: seafile
+spec:
+  selector:
+    app: seafile
+  ports:
+  - name: seahub
+    protocol: TCP
+    port: 80
+    targetPort: seahub
+  - name: seahubstatic
+    protocol: TCP
+    port: 81
+    targetPort: seahubstatic
+  - name: fileserver
+    protocol: TCP
+    port: 82
+    targetPort: filesever
